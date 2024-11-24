@@ -1,0 +1,135 @@
+- name: Set up the pipeline environment on Ubuntu server
+  hosts: all
+  become: yes
+
+  vars:
+    prometheus_version: "2.47.0"
+    grafana_version: "10.1.1"
+    terraform_version: "1.5.7"
+
+  tasks:
+    # Step 1: Update and Upgrade System
+    - name: Update and upgrade packages
+      shell: apt update && apt upgrade
+      # apt:
+      #   update_cache: yes
+      #   upgrade: dist
+
+    # Step 2: Install Common Tools
+    - name: Install required tools
+      apt:
+        name:
+          - curl
+          - wget
+          - unzip
+          - docker.io
+          - docker-compose
+          - openjdk-11-jre
+          - apt-transport-https
+          - software-properties-common
+        state: present
+
+    # Step 3: Install Terraform
+    - name: Download and install Terraform
+      shell: |
+        wget https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_linux_amd64.zip
+        unzip terraform_{{ terraform_version }}_linux_amd64.zip -d /usr/local/bin/
+        rm -f terraform_{{ terraform_version }}_linux_amd64.zip
+      args:
+        creates: /usr/local/bin/terraform
+
+    # Step 4: Install Prometheus
+    - name: Install Prometheus
+      shell: |
+        wget https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz
+        tar -xvf prometheus-{{ prometheus_version }}.linux-amd64.tar.gz -C /opt/
+        ln -s /opt/prometheus-{{ prometheus_version }}.linux-amd64 /opt/prometheus
+      args:
+        creates: /opt/prometheus
+
+    # Step 5: Install Grafana
+    - name: Install Grafana
+      shell: |
+        wget https://dl.grafana.com/oss/release/grafana_{{ grafana_version }}_amd64.deb
+        dpkg -i grafana_{{ grafana_version }}_amd64.deb
+        systemctl enable grafana-server
+        systemctl start grafana-server
+      args:
+        creates: /usr/sbin/grafana-server
+
+    # Step 6: Install SonarQube
+    - name: Install SonarQube
+      shell: |
+        wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.9.1.69595.zip
+        unzip sonarqube-9.9.1.69595.zip -d /opt/
+        ln -s /opt/sonarqube-9.9.1.69595 /opt/sonarqube
+      args:
+        creates: /opt/sonarqube
+
+    # Step 7: Install OWASP ZAP
+    - name: Install OWASP ZAP
+      shell: |
+        wget https://github.com/zaproxy/zaproxy/releases/download/v2.13.0/ZAP_2_13_0_unix.sh
+        chmod +x ZAP_2_13_0_unix.sh
+        ./ZAP_2_13_0_unix.sh -q -dir /opt/zap
+      args:
+        creates: /opt/zap
+
+    # Step 8: Install Kubernetes CLI (kubectl)
+    - name: Install kubectl
+      shell: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/
+      args:
+        creates: /usr/local/bin/kubectl
+
+    # Step 9: Install Helm
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      args:
+        creates: /usr/local/bin/helm
+
+    # Step 10: Install Argo CD CLI
+    - name: Install Argo CD CLI
+      shell: |
+        curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+        chmod +x /usr/local/bin/argocd
+      args:
+        creates: /usr/local/bin/argocd
+
+    # Step 11: Deploy EFK Stack with Docker Compose
+    - name: Deploy EFK Stack using Docker Compose
+      copy:
+        dest: /opt/efk-docker-compose.yml
+        content: |
+          version: '3'
+          services:
+            elasticsearch:
+              image: docker.elastic.co/elasticsearch/elasticsearch:7.17.11
+              environment:
+                - discovery.type=single-node
+              ports:
+                - "9200:9200"
+            kibana:
+              image: docker.elastic.co/kibana/kibana:7.17.11
+              ports:
+                - "5601:5601"
+            fluentd:
+              image: fluent/fluentd:stable
+              ports:
+                - "24224:24224"
+      notify: Start EFK Stack
+
+    # Step 12: Deploy Argo CD to Kubernetes
+    - name: Deploy Argo CD to Kubernetes
+      shell: |
+        kubectl create namespace argocd
+        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+      args:
+        creates: /usr/local/bin/argocd
+
+  handlers:
+    - name: Start EFK Stack
+      command: docker-compose -f /opt/efk-docker-compose.yml up -d
