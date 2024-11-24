@@ -10,7 +10,7 @@
   tasks:
     # Step 1: Update and Upgrade System
     - name: Update and upgrade packages
-      shell: sudo apt update && sudo apt upgrade
+      shell: sudo apt update -y && sudo apt upgrade -y
       # apt:
       #   update_cache: yes
       #   upgrade: dist
