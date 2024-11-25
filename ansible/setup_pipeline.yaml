@@ -9,19 +9,11 @@
 
   tasks:
     # Step 1: Update and Upgrade System
-<<<<<<< HEAD
-    # - name: Update and upgrade packages
-    #   # shell: sudo apt update -y && sudo apt upgrade -y
-    #   apt:
-    #     update_cache: yes
-    #     upgrade: dist
-=======
     - name: Update and upgrade packages
       # shell: sudo apt update -y && sudo apt upgrade -y
       apt:
         update_cache: yes
         upgrade: dist
->>>>>>> origin/pipeline-project
 
     # Step 2: Install Common Tools
     - name: Install required tools
