@@ -27,6 +27,7 @@
           - openjdk-11-jre
           - apt-transport-https
           - software-properties-common
+          - musl
         state: present
 
     # Step 3: Install Terraform
