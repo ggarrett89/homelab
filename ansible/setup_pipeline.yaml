@@ -68,13 +68,13 @@
         creates: /opt/sonarqube
 
     # Step 7: Install OWASP ZAP
-    - name: Install OWASP ZAP
-      shell: |
-        wget https://github.com/zaproxy/zaproxy/releases/download/v2.15.0/ZAP_2_15_0_unix.sh
-        chmod +x ZAP_2_15_0_unix.sh
-        ./ZAP_2_15_0_unix.sh -q -dir /opt/zap
-      args:
-        creates: /opt/zap
+    # - name: Install OWASP ZAP
+    #   shell: |
+    #     wget https://github.com/zaproxy/zaproxy/releases/download/v2.15.0/ZAP_2_15_0_unix.sh
+    #     chmod +x ZAP_2_15_0_unix.sh
+    #     ./ZAP_2_15_0_unix.sh -q -dir /opt/zap
+    #   args:
+    #     creates: /opt/zap
 
     # Step 8: Install Kubernetes CLI (kubectl)
     - name: Install kubectl
