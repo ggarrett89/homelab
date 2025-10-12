@@ -1,7 +1,7 @@
 
 ---
 - name: Configure static IP for Ubuntu Server Pipeline
-  hosts: ubuntu_server_pipeline
+  hosts: all
   become: yes
   vars:
     static_ip: "172.26.144.4"
