@@ -14,7 +14,11 @@
 
   tasks:
     - name: Detect network interface name
+<<<<<<< HEAD
       shell: "ip -o link show | awk -F':' '{print $2}' | grep -v lo | head -n1 | tr -d ' '"
+=======
+      shell: "ip -o link show | awk -F': ' '{print $2}' | grep -v lo | head -n1"
+>>>>>>> origin/inventory-hosts
       register: detected_interface
       changed_when: false
 
