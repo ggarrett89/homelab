@@ -10,11 +10,11 @@
     dns_servers:
       - "8.8.8.8"
       - "8.8.4.4"
-    interface_name: "eth0"  # Change this to your actual interface name (e.g., ens33, enp0s3)
+    interface_name: "eth0"
 
   tasks:
     - name: Detect network interface name
-      shell: ip -o link show | awk -F': ' '{print $2}' | grep -v lo | head -n1
+      shell: "ip -o link show | awk -F': ' '{print $2}' | grep -v lo | head -n1"
       register: detected_interface
       changed_when: false
 
