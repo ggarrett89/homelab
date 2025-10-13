@@ -29,6 +29,7 @@
         name: netplan.io
         state: present
         update_cache: yes
+      become: true
 
     - name: Create netplan configuration for static IP
       copy:
