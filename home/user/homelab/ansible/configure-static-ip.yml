@@ -28,8 +28,9 @@
       apt:
         name: netplan.io
         state: present
-        update_cache: yes
+        # update_cache: yes
       become: true
+      ignore_errors: yes
 
     - name: Create netplan configuration for static IP
       copy:
