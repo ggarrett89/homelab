@@ -4,12 +4,13 @@
   hosts: all
   become: yes
   vars:
-    static_ip: "172.26.144.4"
-    netmask: "255.255.255.0"
+    static_ip: "172.30.215.146"
+    netmask: "255.255.240.0"
     gateway: "172.26.144.1"
     dns_servers:
       - "8.8.8.8"
       - "8.8.4.4"
+      - "1.1.1.1"
     interface_name: "eth0"
 
   tasks:
@@ -67,6 +68,7 @@
       wait_for:
         timeout: 10
       delegate_to: localhost
+      ignore_errors: yes
 
     - name: Verify network connectivity
       wait_for_connection:
