@@ -4,7 +4,7 @@
   hosts: all
   become: yes
   vars:
-    static_ip: "172.30.215.146"
+    static_ip: "172.18.243.116"
     netmask: "255.255.240.0"
     gateway: "172.26.144.1"
     dns_servers:
