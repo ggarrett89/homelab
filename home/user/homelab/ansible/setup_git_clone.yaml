@@ -4,9 +4,9 @@
   become: yes
 
   vars:
-    repo_url: "https://github.com/your-username/your-repo.git"
-    repo_dest: "/opt/your-repo"
-    repo_version: "main"  # branch, tag, or commit hash
+    repo_url: "https://github.com/ggarrett89/homelab.git"
+    repo_dest: "/opt/homelab"
+    repo_version: "install_git"  # branch, tag, or commit hash
 
   tasks:
     # Step 1: Install Git
