@@ -17,6 +17,14 @@
         update_cache: yes
       ignore_errors: true
 
+    - name: Create directory for repository
+      file:
+        path: "{{ repo_dest }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: 0755
+
     # Step 2: Clone repository
     - name: Clone Git repository
       git:
