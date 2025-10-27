@@ -25,7 +25,8 @@
         version: "{{ repo_version }}"
         clone: yes
         update: yes
-      become: no  # Run as regular user if needed
+      become: false  # Run as regular user if needed
+      become_user: devops
 
     # Step 3: Set repository permissions (optional)
     - name: Set repository ownership
