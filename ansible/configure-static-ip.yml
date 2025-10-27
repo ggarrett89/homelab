@@ -1,0 +1,78 @@
+
+---
+- name: Configure static IP for Ubuntu Server Pipeline
+  hosts: all
+  become: yes
+  vars:
+    static_ip: "172.18.243.116"
+    netmask: "255.255.240.0"
+    gateway: "172.26.144.1"
+    dns_servers:
+      - "8.8.8.8"
+      - "8.8.4.4"
+      - "1.1.1.1"
+    interface_name: "eth0"
+
+  tasks:
+    - name: Detect network interface name
+      shell: "ip -o link show | awk -F':' '{print $2}' | grep -v lo | head -n1 | tr -d ' '"
+      register: detected_interface
+      changed_when: false
+
+    - name: Set interface name if not manually specified
+      set_fact:
+        interface_name: "{{ detected_interface.stdout }}"
+      when: interface_name == "eth0"
+
+    - name: Install netplan (if not present)
+      apt:
+        name: netplan.io
+        state: present
+        # update_cache: yes
+      become: true
+      ignore_errors: yes
+
+    - name: Create netplan configuration for static IP
+      copy:
+        content: |
+          network:
+            version: 2
+            renderer: networkd
+            ethernets:
+              {{ interface_name }}:
+                addresses:
+                  - {{ static_ip }}/24
+                routes:
+                  - to: default
+                    via: {{ gateway }}
+                nameservers:
+                  addresses:
+                    - {{ dns_servers[0] }}
+                    - {{ dns_servers[1] }}
+                dhcp4: no
+        dest: /etc/netplan/01-static-ip.yaml
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Remove old netplan configurations
+      shell: rm -f /etc/netplan/00-installer-config.yaml /etc/netplan/50-cloud-init.yaml
+      args:
+        warn: false
+      ignore_errors: yes
+
+    - name: Apply netplan configuration
+      command: netplan apply
+      async: 45
+      poll: 0
+
+    - name: Wait for network to stabilize
+      wait_for:
+        timeout: 10
+      delegate_to: localhost
+      ignore_errors: yes
+
+    - name: Verify network connectivity
+      wait_for_connection:
+        timeout: 30
+        delay: 5
