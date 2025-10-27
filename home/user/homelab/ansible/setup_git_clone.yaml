@@ -15,6 +15,7 @@
         name: git
         state: present
         update_cache: yes
+      ignore_errors: true
 
     # Step 2: Clone repository
     - name: Clone Git repository
