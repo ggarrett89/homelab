@@ -1,0 +1,71 @@
+---
+- name: Copy files from multiple folders to Windows servers and verify
+  hosts: all
+  gather_facts: no
+  vars:
+    folder_to_server_map:
+      folder1:
+        group: ["server1", "server2"]
+        dest_paths:
+          server1: "C:\\destination\\server1\\folder1"
+          server2:
+            - "C:\\destination\\server2\\folder1\\port1"
+            - "C:\\destination\\server2\\folder1\\port2"
+            - "C:\\destination\\server2\\folder1\\port3"
+      folder2:
+        group: ["server1", "server3"]
+        dest_paths:
+          server1: "C:\\destination\\server1\\folder2"
+          server3: "C:\\destination\\server3\\folder2"
+    shared_folder_base: "Z:\\network_shared"
+
+  tasks:
+    - name: Get list of files for all folders assigned to this host
+      win_find:
+        paths: "{{ shared_folder_base }}\\{{ item }}"
+        file_type: file
+      loop: "{{ folder_to_server_map.keys() | list }}"
+      when: inventory_hostname in folder_to_server_map[item].group
+      register: files_found
+
+    - name: Flatten list of files to copy
+      set_fact:
+        files_to_copy: "{{ files_found.results | map(attribute='files') | sum(start=[]) }}"
+
+    - name: Copy files to appropriate destination(s) for this host
+      win_copy:
+        src: "{{ item.path }}"
+        dest: "{{ dest }}"
+        flat: yes
+        force: true
+      loop: "{{ files_to_copy }}"
+      vars:
+        folder: "{{ item.path.split('\\')[-2] }}"  # Extract folder name from path
+        dest_paths: >
+          {{ folder_to_server_map[folder].dest_paths[inventory_hostname] 
+          if folder_to_server_map[folder].dest_paths[inventory_hostname] is string
+          else folder_to_server_map[folder].dest_paths[inventory_hostname] | list }}
+        dest: "{{ dest_paths | flatten }}"
+      when: inventory_hostname in folder_to_server_map[folder].group
+      register: copy_results
+
+    - name: Verify if files were copied successfully
+      win_stat:
+        path: "{{ dest }}\\{{ item.path | basename }}"
+      loop: "{{ files_to_copy }}"
+      vars:
+        folder: "{{ item.path.split('\\')[-2] }}"
+        dest_paths: >
+          {{ folder_to_server_map[folder].dest_paths[inventory_hostname] 
+          if folder_to_server_map[folder].dest_paths[inventory_hostname] is string
+          else folder_to_server_map[folder].dest_paths[inventory_hostname] | list }}
+        dest: "{{ dest_paths | flatten }}"
+      when: inventory_hostname in folder_to_server_map[folder].group
+      register: verification_results
+
+    - name: Remove successfully copied files from shared folder
+      win_file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ files_to_copy }}"
+      when: item.path in (verification_results.results | selectattr('stat.exists', 'equalto', true) | map(attribute='path') | list)"
