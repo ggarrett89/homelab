@@ -34,7 +34,7 @@
         clone: yes
         update: yes
       become: false  # Run as regular user if needed
-      become_user: devops
+      # become_user: devops
 
     # Step 3: Set repository permissions (optional)
     - name: Set repository ownership
