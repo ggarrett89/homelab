@@ -41,6 +41,7 @@
         name: pip
         state: latest
         executable: pip3
+      ignore_errors: yes
 
     - name: Create symbolic link for python (optional)
       file:
