@@ -1,0 +1,9 @@
+---
+- name: Install Python dependencies from requirements.txt
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install dependencies from requirements.txt
+      pip:
+        requirements: /opt/homelab/requirements.txt
+        executable: pip3
