@@ -11,7 +11,7 @@
       - "8.8.8.8"
       - "8.8.4.4"
       - "1.1.1.1"
-    interface_name: "eth0"
+    interface_name: "eth1"
 
   tasks:
     - name: Detect network interface name
