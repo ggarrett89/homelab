@@ -8,3 +8,4 @@
         requirements: /opt/homelab/requirements.txt
         executable: pip3
         extra_args: --break-system-packages
+
