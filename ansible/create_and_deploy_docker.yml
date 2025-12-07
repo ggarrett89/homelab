@@ -1,0 +1,31 @@
+git a
+---
+- name: Create and Deploy Docker Container
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create Dockerfile
+      copy:
+        dest: /opt/homelab/Dockerfile
+        content: |
+          FROM python:3.10-alpine
+
+          COPY requirements.txt /tmp
+
+          RUN pip install -r /tmp/requirements.txt
+
+          COPY ./src /src
+
+          CMD python /src/app.py
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+
+    - name: Build Docker image
+      docker_image:
+        name: python-app
+        tag: v1
+        source: build
+        build:
+          path: /opt/homelab
+        state: present
