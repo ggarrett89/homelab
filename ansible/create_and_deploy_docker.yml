@@ -20,6 +20,12 @@
         group: "{{ ansible_user }}"
         mode: '0644'
 
+    - name: Ensure Docker service is running
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
     - name: Build Docker image
       docker_image:
         name: python-app
