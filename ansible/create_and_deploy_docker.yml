@@ -1,0 +1,64 @@
+
+---
+- name: Create and Deploy Docker Container
+  hosts: all
+  become: yes
+  vars:
+    docker_username: garrett1989
+    docker_token: "{{token_docker}}" 
+    docker_repo: garrett1989/python-app-flask
+    image_tag: v1
+
+  tasks:
+    - name: Create Dockerfile
+      copy:
+        dest: /opt/homelab/Dockerfile
+        content: |
+          FROM python:3.10-alpine
+
+          COPY requirements.txt /tmp
+
+          RUN pip install -r /tmp/requirements.txt
+
+          COPY ./src /src
+
+          CMD python /src/app.py
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+
+    - name: Ensure Docker service is running
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Build Docker image
+      docker_image:
+        name: python-app
+        tag: "{{ image_tag }}"
+        source: build
+        build:
+          path: /opt/homelab
+        state: present
+
+    - name: Login to Docker Hub
+      shell: echo "{{ docker_token }}" | docker login -u "{{ docker_username }}" --password-stdin
+      no_log: true
+
+    - name: Tag image for Docker Hub
+      shell: docker tag python-app:{{ image_tag }} {{ docker_repo }}:{{ image_tag }}
+
+    - name: Push image to Docker Hub
+      shell: docker push {{ docker_repo }}:{{ image_tag }}
+
+    - name: Remove unknown AppArmor profiles
+      shell: aa-remove-unknown
+      ignore_errors: yes
+
+    - name: Stop and remove existing container if running
+      shell: docker stop python-app-flask && docker rm python-app-flask
+      ignore_errors: yes
+
+    - name: Run Docker container
+      shell: docker run -d --name python-app-flask --restart always -p 8080:5000 {{ docker_repo }}:{{ image_tag }}
