@@ -36,6 +36,13 @@
           path: /opt/homelab
         state: present
 
+    - name: Remove unknown AppArmor profiles
+      shell: aa-remove-unknown
+      ignore_errors: yes
+
+    - name: Stop and remove existing container if running
+      shell: docker stop python-app-flask && docker rm python-app-flask
+      ignore_errors: yes
+
     - name: Run Docker container
       shell: docker run -d --name python-app-flask --restart always -p 8080:5000 python-app:v1
-      
