@@ -1,3 +1,4 @@
+
 ---
 - name: Create and Deploy Docker Container
   hosts: all
@@ -34,6 +35,14 @@
         build:
           path: /opt/homelab
         state: present
+      become: no
+
+    - name: Stop existing container if running
+      docker_container:
+        name: python-app
+        state: absent
+      become: no
+      ignore_errors: yes
 
     - name: Run Docker container
       docker_container:
@@ -43,3 +52,4 @@
         restart_policy: always
         ports:
           - "8080:5000"
+      become: no
