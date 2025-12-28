@@ -37,5 +37,5 @@
         state: present
 
     - name: Run Docker container
-      shell: docker run -d --name python-app --restart always -p 8080:5000 python-app:v1
+      shell: docker run -d --name python-app-flask --restart always -p 8080:5000 python-app:v1
       
