@@ -35,7 +35,6 @@
         build:
           path: /opt/homelab
         state: present
-      become: no
 
     - name: Stop existing container if running
       docker_container:
