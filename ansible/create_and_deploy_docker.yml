@@ -36,13 +36,6 @@
           path: /opt/homelab
         state: present
 
-    - name: Stop existing container if running
-      docker_container:
-        name: python-app
-        state: absent
-      become: no
-      ignore_errors: yes
-
     - name: Run Docker container
       docker_container:
         name: python-app
